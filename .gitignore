@@ -1,0 +1,25 @@
+# Node
+node_modules/
+npm-debug.log*
+dist/
+.env
+.env.local
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Development.json
+
+# Mac
+.DS_Store
+
+# Temp files
+/tmp/
+*.mp4
+
+# Logs
+logs/
+*.log

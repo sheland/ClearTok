@@ -466,3 +466,48 @@
   .steps { gap: 1rem; }
   .headline { font-size: 2.2rem; }
 }
+
+/* ─── Progress Bar ────────────────────────────────────────────────────────── */
+/* Add these styles to the bottom of your existing App.css */
+ 
+.progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ 
+.progress-bar {
+  height: 4px;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+ 
+.progress-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+ 
+/* Loading state on input */
+.input-wrap.input-loading {
+  border-color: rgba(99,211,180,0.3);
+}
+ 
+/* Bigger success icon */
+.success-icon {
+  margin-bottom: 0.5rem;
+  animation: popIn 0.4s var(--transition) both;
+}
+ 
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+ 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

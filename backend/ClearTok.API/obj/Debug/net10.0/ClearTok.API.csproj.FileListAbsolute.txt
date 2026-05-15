@@ -32,3 +32,4 @@
 /Users/shelan/Desktop/Watermark/ClearTok/backend/ClearTok.API/obj/Debug/net10.0/ClearTok.API.pdb
 /Users/shelan/Desktop/Watermark/ClearTok/backend/ClearTok.API/obj/Debug/net10.0/ClearTok.API.genruntimeconfig.cache
 /Users/shelan/Desktop/Watermark/ClearTok/backend/ClearTok.API/obj/Debug/net10.0/ref/ClearTok.API.dll
+/Users/shelan/Desktop/Watermark/ClearTok/backend/ClearTok.API/obj/Debug/net10.0/ClearTok.API.sourcelink.json

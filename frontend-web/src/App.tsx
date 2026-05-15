@@ -1,49 +1,75 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useDownload } from './hooks/useDownload'
 import AdSlot from './components/AdSlot'
 import './App.css'
-
+ 
 export default function App() {
   const [url, setUrl] = useState('')
+  const [progress, setProgress] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { status, errorMessage, handleDownload, reset } = useDownload()
-
+ 
   const isLoading = status === 'loading'
   const isSuccess = status === 'success'
   const isError = status === 'error'
-
+ 
+  // ── Progress bar simulation ────────────────────────────────────────────────
+  // We can't know the real download % so we simulate it.
+  // It fills quickly to 80% then slows down and waits for the real response.
+  // When success fires, we jump to 100% then hide it.
+  useEffect(() => {
+    if (isLoading) {
+      setProgress(0)
+      let current = 0
+ 
+      progressRef.current = setInterval(() => {
+        current += current < 50 ? 3 : current < 75 ? 1.5 : current < 85 ? 0.5 : 0.1
+        if (current >= 88) current = 88 // pause near end, wait for real response
+        setProgress(current)
+      }, 200)
+    }
+ 
+    if (isSuccess) {
+      // Jump to 100% on success
+      if (progressRef.current) clearInterval(progressRef.current)
+      setProgress(100)
+      // Fade out after a moment
+      setTimeout(() => setProgress(0), 1000)
+    }
+ 
+    if (isError || status === 'idle') {
+      if (progressRef.current) clearInterval(progressRef.current)
+      setProgress(0)
+    }
+ 
+    return () => {
+      if (progressRef.current) clearInterval(progressRef.current)
+    }
+  }, [status, isLoading, isSuccess, isError])
+ 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!url.trim() || isLoading) return
     handleDownload(url.trim())
   }
-
-  function onPaste() {
-    // Small UX touch: auto-submit if user pastes a URL
-    setTimeout(() => {
-      const val = inputRef.current?.value ?? ''
-      if (val.includes('tiktok.com')) {
-        handleDownload(val.trim())
-      }
-    }, 100)
-  }
-
+ 
   function onReset() {
     setUrl('')
     reset()
     inputRef.current?.focus()
   }
-
+ 
   return (
     <div className="page">
-
-      {/* ── Top Ad (leaderboard) ─────────────────────────────────── */}
+ 
+      {/* ── Top Ad ─────────────────────────────────────────────────── */}
       <div className="ad-top">
         <AdSlot slot="1234567890" format="leaderboard" />
       </div>
-
-      {/* ── Header ──────────────────────────────────────────────── */}
+ 
+      {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="header">
         <div className="logo">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -61,50 +87,52 @@ export default function App() {
           <Link to="/dmca">DMCA</Link>
         </nav>
       </header>
-
-      {/* ── Hero ────────────────────────────────────────────────── */}
+ 
+      {/* ── Hero ───────────────────────────────────────────────────── */}
       <main className="hero">
-
-        {/* Background glow orbs */}
+ 
         <div className="glow glow-1" />
         <div className="glow glow-2" />
-
+ 
         <div className="hero-content">
-
+ 
           <div className="badge">
             <span className="badge-dot" />
             Free for creators
           </div>
-
+ 
           <h1 className="headline">
             Your TikToks,<br />
             <span className="headline-accent">watermark-free.</span>
           </h1>
-
+ 
           <p className="subheadline">
             Paste your TikTok link below and download your own video in seconds — clean, HD, ready to share anywhere.
           </p>
-
-          {/* ── Main Input Card ──────────────────────────────────── */}
+ 
+          {/* ── Main Input Card ─────────────────────────────────────── */}
           <div className="card">
-
+ 
             {isSuccess ? (
+              // ── Success State ────────────────────────────────────────
               <div className="success-state">
                 <div className="success-icon">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="16" fill="var(--accent)" fillOpacity="0.15"/>
-                    <path d="M9 16.5L13.5 21L23 11" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="24" r="24" fill="var(--accent)" fillOpacity="0.15"/>
+                    <path d="M13 24.5L20 31.5L35 16" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
                 <p className="success-text">Your video is downloading!</p>
-                <p className="success-sub">Find it in your Downloads folder.</p>
+                <p className="success-sub">Check your Downloads folder — your watermark-free video is there.</p>
                 <button className="btn-secondary" onClick={onReset}>
-                  Download another
+                  Download another video
                 </button>
               </div>
             ) : (
+              // ── Download Form ────────────────────────────────────────
               <form onSubmit={onSubmit} className="download-form">
-                <div className={`input-wrap ${isError ? 'input-error' : ''}`}>
+ 
+                <div className={`input-wrap ${isError ? 'input-error' : ''} ${isLoading ? 'input-loading' : ''}`}>
                   <svg className="input-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M3 9H15M15 9L10 4M15 9L10 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -115,7 +143,6 @@ export default function App() {
                     placeholder="Paste your TikTok link here..."
                     value={url}
                     onChange={e => { setUrl(e.target.value); if (isError) reset() }}
-                    onPaste={onPaste}
                     disabled={isLoading}
                     autoFocus
                     aria-label="TikTok video URL"
@@ -126,11 +153,30 @@ export default function App() {
                     </button>
                   )}
                 </div>
-
+ 
+                {/* ── Progress Bar ───────────────────────────────────── */}
+                {isLoading && (
+                  <div className="progress-wrap">
+                    <div
+                      className="progress-bar"
+                      style={{ width: `${progress}%` }}
+                    />
+                    <p className="progress-label">
+                      {progress < 30
+                        ? 'Connecting to TikTok...'
+                        : progress < 60
+                        ? 'Downloading your video...'
+                        : progress < 85
+                        ? 'Almost there...'
+                        : 'Finishing up...'}
+                    </p>
+                  </div>
+                )}
+ 
                 {isError && (
                   <p className="error-msg" role="alert">{errorMessage}</p>
                 )}
-
+ 
                 <button
                   type="submit"
                   className={`btn-primary ${isLoading ? 'loading' : ''}`}
@@ -154,35 +200,37 @@ export default function App() {
               </form>
             )}
           </div>
-
-          {/* ── How it works ─────────────────────────────────────── */}
-          <div className="steps">
-            {[
-              { n: '1', label: 'Copy your TikTok link' },
-              { n: '2', label: 'Paste it above' },
-              { n: '3', label: 'Hit download — done' },
-            ].map(step => (
-              <div key={step.n} className="step">
-                <span className="step-num">{step.n}</span>
-                <span className="step-label">{step.label}</span>
-              </div>
-            ))}
-          </div>
-
+ 
+          {/* ── Steps ──────────────────────────────────────────────── */}
+          {!isLoading && !isSuccess && (
+            <div className="steps">
+              {[
+                { n: '1', label: 'Copy your TikTok link' },
+                { n: '2', label: 'Paste it above' },
+                { n: '3', label: 'Click download — done' },
+              ].map(step => (
+                <div key={step.n} className="step">
+                  <span className="step-num">{step.n}</span>
+                  <span className="step-label">{step.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+ 
         </div>
       </main>
-
-      {/* ── Mid-page Ad ──────────────────────────────────────────── */}
+ 
+      {/* ── Mid Ad ─────────────────────────────────────────────────── */}
       <div className="ad-mid">
         <AdSlot slot="0987654321" format="rectangle" />
       </div>
-
-      {/* ── Features strip ───────────────────────────────────────── */}
+ 
+      {/* ── Features ───────────────────────────────────────────────── */}
       <section className="features">
         {[
           { icon: '⚡', title: 'Instant', desc: 'Download in seconds, no waiting.' },
           { icon: '🎯', title: 'HD Quality', desc: 'Original resolution preserved.' },
-          { icon: '🔒', title: 'Private', desc: 'We don\'t store your videos.' },
+          { icon: '🔒', title: 'Private', desc: "We don't store your videos." },
           { icon: '✦', title: 'Free', desc: 'No account needed, ever.' },
         ].map(f => (
           <div key={f.title} className="feature-card">
@@ -192,8 +240,8 @@ export default function App() {
           </div>
         ))}
       </section>
-
-      {/* ── Footer ───────────────────────────────────────────────── */}
+ 
+      {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer className="footer">
         <p className="footer-legal">
           ClearTok is intended for downloading your own TikTok content only. By using this tool you agree to our{' '}
@@ -206,7 +254,7 @@ export default function App() {
         </div>
         <p className="footer-copy">© {new Date().getFullYear()} ClearTok</p>
       </footer>
-
+ 
     </div>
   )
 }

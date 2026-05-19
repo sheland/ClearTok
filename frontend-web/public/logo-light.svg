@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 52" width="220" height="52">
+  <!-- Icon -->
+  <circle cx="26" cy="26" r="22" fill="#63D3B4" fill-opacity="0.12" stroke="#0D9E7E" stroke-width="1.5"/>
+  <line x1="26" y1="14" x2="26" y2="30" stroke="#0D9E7E" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="18,25 26,34 34,25" fill="none" stroke="#0D9E7E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="18" y1="39" x2="34" y2="39" stroke="#0D9E7E" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Wordmark — for light backgrounds -->
+  <text x="58" y="20" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="26" letter-spacing="-0.5" fill="#1A1A2E">Clear</text>
+  <text x="58" y="46" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="26" letter-spacing="-0.5" fill="#0D9E7E">Tok</text>
+</svg>

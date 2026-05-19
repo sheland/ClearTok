@@ -9,6 +9,7 @@ export default function App() {
   const [progress, setProgress] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isSubmitting = useRef(false)
   const { status, errorMessage, handleDownload, reset } = useDownload()
  
   const isLoading = status === 'loading'
@@ -48,12 +49,15 @@ export default function App() {
       if (progressRef.current) clearInterval(progressRef.current)
     }
   }, [status, isLoading, isSuccess, isError])
- 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!url.trim() || isLoading) return
-    handleDownload(url.trim())
-  }
+
+function onSubmit(e: React.FormEvent) {
+  e.preventDefault()
+  if (!url.trim() || isLoading || isSubmitting.current) return
+  isSubmitting.current = true
+  handleDownload(url.trim()).finally(() => {
+    isSubmitting.current = false
+  })
+}
  
   function onReset() {
     setUrl('')
@@ -72,14 +76,7 @@ export default function App() {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="header">
         <div className="logo">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="8" fill="var(--accent)" fillOpacity="0.15"/>
-            <path d="M8 14.5C8 11 10.5 8 14 8C16.5 8 18.5 9.5 19.5 11.5" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M20 13.5C20 17 17.5 20 14 20C11.5 20 9.5 18.5 8.5 16.5" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="20" cy="11" r="2" fill="var(--accent)"/>
-            <circle cx="8" cy="17" r="2" fill="var(--accent)"/>
-          </svg>
-          <span className="logo-text">ClearTok</span>
+          <img src="/logo-dark.svg" alt="ClearTok" height="36" />
         </div>
         <nav className="nav">
           <Link to="/terms">Terms</Link>

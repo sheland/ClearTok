@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ClearTok.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+663b7ebe44cf4ce03cc82aaa7aa59a4347bf6b6a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ca5689f7e2b6d6bd4aa69c441ee615dd15a9ace3")]
 [assembly: System.Reflection.AssemblyProductAttribute("ClearTok.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ClearTok.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5173",   // Vite dev server
-                "http://localhost:3000",   // Alt dev port
+                "https://getcleartok.com",   // Production domain
                 "https://cleartok.azurestaticapps.net" // Production (update with your domain)
             )
             .AllowAnyHeader()

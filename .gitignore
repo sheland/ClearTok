@@ -24,3 +24,5 @@ appsettings.Development.json
 logs/
 *.log
 .DS_Store
+backend/ClearTok.API/publish/
+backend/ClearTok.API/cleartok-api.zip

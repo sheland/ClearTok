@@ -12,9 +12,9 @@ export interface UseDownloadReturn {
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-// How long to wait before giving up on a download (60 seconds)
+// How long to wait before giving up on a download (90 seconds)
 // TikTok videos can be large and connections can be slow
-const DOWNLOAD_TIMEOUT_MS = 60_000
+const DOWNLOAD_TIMEOUT_MS = 90_000
 
 // How long to show the success message before auto-resetting (6 seconds)
 const SUCCESS_RESET_MS = 6_000
@@ -24,7 +24,7 @@ const SUCCESS_RESET_MS = 6_000
 // Components just call handleDownload(url) and react to status changes.
 //
 // Changes from v1:
-// 1. Added 60 second timeout — if download takes too long, shows friendly error
+// 1. Added 90 second timeout — if download takes too long, shows friendly error
 // 2. Extended success message to 6 seconds so user actually sees it
 // 3. Better error message for timeout vs other errors
 export function useDownload(): UseDownloadReturn {

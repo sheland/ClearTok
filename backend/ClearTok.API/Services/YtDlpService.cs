@@ -49,7 +49,6 @@ public class YtDlpService : IYtDlpService
                 $"--no-playlist " +
                 $"--merge-output-format mp4 " +
                 $"--impersonate chrome " +
-                $"--cookies-from-browser chrome " +
                 $"-f \"bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best\" " +
                 $"\"{url}\"";
 

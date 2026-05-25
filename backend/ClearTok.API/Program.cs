@@ -23,7 +23,8 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5173",   // Vite dev server
                 "https://getcleartok.com",   // Production domain
-                "https://cleartok.azurestaticapps.net" // Production (update with your domain)
+                "https://cleartok.azurestaticapps.net", // Production (update with your domain)
+                "https://proud-flower-0245b0910.7.azurestaticapps.net" 
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -68,8 +69,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+
 app.UseCors("ClearTokPolicy");
+app.UseHttpsRedirection();
 app.UseRateLimiter();
 
 // Global error handling middleware

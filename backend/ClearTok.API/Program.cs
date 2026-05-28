@@ -27,7 +27,8 @@ builder.Services.AddCors(options =>
                 "https://proud-flower-0245b0910.7.azurestaticapps.net" 
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .WithExposedHeaders("Content-Disposition");
     });
 });
 

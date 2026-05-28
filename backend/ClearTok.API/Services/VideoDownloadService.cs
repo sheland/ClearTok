@@ -38,6 +38,10 @@ public class VideoDownloadService : IVideoDownloadService
         // Extract the video ID from the URL to use as the filename
         // TikTok URLs follow the pattern: /video/1234567890123456789
         var videoId = ExtractVideoId(url);
+
+        // Add this line temporarily to debug
+        _logger.LogInformation("Extracted video ID: {VideoId} from URL: {Url}", videoId ?? "NULL", url);
+
         var fileName = videoId != null
             ? $"cleartok-{videoId}.mp4"
             : $"cleartok-{Guid.NewGuid():N}.mp4"; // fallback if ID can't be extracted

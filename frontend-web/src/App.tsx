@@ -3,7 +3,32 @@ import { Link } from 'react-router-dom'
 import { useDownload } from './hooks/useDownload'
 import AdSlot from './components/AdSlot'
 import './App.css'
- 
+
+import { FAQ_ITEMS_SHORT as FAQ_ITEMS } from './data/faqData'
+
+// ─── FAQ Item Component ───────────────────────────────────────────────────────
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`faq-item ${open ? 'faq-open' : ''}`}>
+      <button className="faq-question" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <span>{q}</span>
+        <svg
+          className="faq-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+        >
+          <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      </button>
+      {open && <p className="faq-answer">{a}</p>}
+    </div>
+  )
+}
+
 export default function App() {
   const [url, setUrl] = useState('')
   const [progress, setProgress] = useState(0)
@@ -11,107 +36,98 @@ export default function App() {
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isSubmitting = useRef(false)
   const { status, errorMessage, handleDownload, reset } = useDownload()
- 
+
   const isLoading = status === 'loading'
   const isSuccess = status === 'success'
   const isError = status === 'error'
- 
+
   // ── Progress bar simulation ────────────────────────────────────────────────
-  // We can't know the real download % so we simulate it.
-  // It fills quickly to 80% then slows down and waits for the real response.
-  // When success fires, we jump to 100% then hide it.
   useEffect(() => {
     if (isLoading) {
       setProgress(0)
       let current = 0
- 
       progressRef.current = setInterval(() => {
         current += current < 50 ? 3 : current < 75 ? 1.5 : current < 85 ? 0.5 : 0.1
-        if (current >= 88) current = 88 // pause near end, wait for real response
+        if (current >= 88) current = 88
         setProgress(current)
       }, 200)
     }
- 
     if (isSuccess) {
-      // Jump to 100% on success
       if (progressRef.current) clearInterval(progressRef.current)
       setProgress(100)
-      // Fade out after a moment
       setTimeout(() => setProgress(0), 1000)
     }
- 
     if (isError || status === 'idle') {
       if (progressRef.current) clearInterval(progressRef.current)
       setProgress(0)
     }
- 
     return () => {
       if (progressRef.current) clearInterval(progressRef.current)
     }
   }, [status, isLoading, isSuccess, isError])
 
-function onSubmit(e: React.FormEvent) {
-  e.preventDefault()
-  if (!url.trim() || isLoading || isSubmitting.current) return
-  isSubmitting.current = true
-  handleDownload(url.trim()).finally(() => {
-    isSubmitting.current = false
-  })
-}
- 
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!url.trim() || isLoading || isSubmitting.current) return
+    isSubmitting.current = true
+    handleDownload(url.trim()).finally(() => {
+      isSubmitting.current = false
+    })
+  }
+
   function onReset() {
     setUrl('')
     reset()
     inputRef.current?.focus()
   }
- 
+
   return (
     <div className="page">
- 
+
       {/* ── Top Ad ─────────────────────────────────────────────────── */}
       <div className="ad-top">
         <AdSlot slot="1234567890" format="leaderboard" />
       </div>
- 
+
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="header">
         <div className="logo">
           <img src="/logo-dark.svg" alt="ClearTok" height="36" />
         </div>
         <nav className="nav">
+          <Link to="/faq">FAQ</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/dmca">DMCA</Link>
         </nav>
       </header>
- 
+
       {/* ── Hero ───────────────────────────────────────────────────── */}
       <main className="hero">
- 
+
         <div className="glow glow-1" />
         <div className="glow glow-2" />
- 
+
         <div className="hero-content">
- 
+
           <div className="badge">
             <span className="badge-dot" />
             Free for creators
           </div>
- 
+
           <h1 className="headline">
             Your TikToks,<br />
             <span className="headline-accent">watermark-free.</span>
           </h1>
- 
+
           <p className="subheadline">
             Paste your TikTok link below and download your own video in seconds — clean, HD, ready to share anywhere.
           </p>
- 
+
           {/* ── Main Input Card ─────────────────────────────────────── */}
           <div className="card">
- 
+
             {isSuccess ? (
-              // ── Success State ────────────────────────────────────────
               <div className="success-state">
                 <div className="success-icon">
                   <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -126,9 +142,8 @@ function onSubmit(e: React.FormEvent) {
                 </button>
               </div>
             ) : (
-              // ── Download Form ────────────────────────────────────────
               <form onSubmit={onSubmit} className="download-form">
- 
+
                 <div className={`input-wrap ${isError ? 'input-error' : ''} ${isLoading ? 'input-loading' : ''}`}>
                   <svg className="input-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M3 9H15M15 9L10 4M15 9L10 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -150,14 +165,11 @@ function onSubmit(e: React.FormEvent) {
                     </button>
                   )}
                 </div>
- 
+
                 {/* ── Progress Bar ───────────────────────────────────── */}
                 {isLoading && (
                   <div className="progress-wrap">
-                    <div
-                      className="progress-bar"
-                      style={{ width: `${progress}%` }}
-                    />
+                    <div className="progress-bar" style={{ width: `${progress}%` }} />
                     <p className="progress-label">
                       {progress < 30
                         ? 'Connecting to TikTok...'
@@ -169,11 +181,11 @@ function onSubmit(e: React.FormEvent) {
                     </p>
                   </div>
                 )}
- 
+
                 {isError && (
                   <p className="error-msg" role="alert">{errorMessage}</p>
                 )}
- 
+
                 <button
                   type="submit"
                   className={`btn-primary ${isLoading ? 'loading' : ''}`}
@@ -197,7 +209,7 @@ function onSubmit(e: React.FormEvent) {
               </form>
             )}
           </div>
- 
+
           {/* ── Steps ──────────────────────────────────────────────── */}
           {!isLoading && !isSuccess && (
             <div className="steps">
@@ -213,15 +225,15 @@ function onSubmit(e: React.FormEvent) {
               ))}
             </div>
           )}
- 
+
         </div>
       </main>
- 
+
       {/* ── Mid Ad ─────────────────────────────────────────────────── */}
       <div className="ad-mid">
         <AdSlot slot="0987654321" format="rectangle" />
       </div>
- 
+
       {/* ── Features ───────────────────────────────────────────────── */}
       <section className="features">
         {[
@@ -237,7 +249,20 @@ function onSubmit(e: React.FormEvent) {
           </div>
         ))}
       </section>
- 
+
+      {/* ── FAQ ────────────────────────────────────────────────────── */}
+      <section className="faq-section">
+        <h2 className="faq-heading">Frequently asked questions</h2>
+        <div className="faq-list">
+          {FAQ_ITEMS.map(item => (
+            <FaqItem key={item.q} q={item.q} a={item.a} />
+          ))}
+        </div>
+        <p className="faq-more">
+          More questions? Visit our <Link to="/faq">full FAQ page</Link>.
+        </p>
+      </section>
+
       {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer className="footer">
         <p className="footer-legal">
@@ -245,13 +270,14 @@ function onSubmit(e: React.FormEvent) {
           <Link to="/terms">Terms of Service</Link>. Please respect creator rights.
         </p>
         <div className="footer-links">
+          <Link to="/faq">FAQ</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/dmca">DMCA</Link>
         </div>
         <p className="footer-copy">© {new Date().getFullYear()} ClearTok</p>
       </footer>
- 
+
     </div>
   )
 }

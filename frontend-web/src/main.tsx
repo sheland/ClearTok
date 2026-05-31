@@ -5,6 +5,7 @@ import App from './App'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import DMCA from './pages/DMCA'
+import FAQ from './pages/FAQ'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/dmca" element={<DMCA />} />
+        <Route path="/faq" element={<FAQ />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

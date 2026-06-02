@@ -154,7 +154,15 @@ export default function App() {
                     className="url-input"
                     placeholder="Paste your TikTok link here..."
                     value={url}
-                    onChange={e => { setUrl(e.target.value); if (isError) reset() }}
+                    onChange={e => {
+                      let value = e.target.value
+                      // Strip caption text that TikTok mobile adds before the URL
+                      // e.g. "She's the best https://..." → "https://..."
+                      const urlMatch = value.match(/https?:\/\/\S+/)
+                      if (urlMatch) value = urlMatch[0]
+                      setUrl(value)
+                      if (isError) reset()
+                   }}
                     disabled={isLoading}
                     autoFocus
                     aria-label="TikTok video URL"

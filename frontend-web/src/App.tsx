@@ -95,6 +95,7 @@ export default function App() {
           <img src="/logo-dark.svg" alt="ClearTok" height="36" />
         </div>
         <nav className="nav">
+          <Link to="/blog">Blog</Link>
           <Link to="/faq">FAQ</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/privacy">Privacy</Link>
@@ -278,6 +279,7 @@ export default function App() {
           <Link to="/terms">Terms of Service</Link>. Please respect creator rights.
         </p>
         <div className="footer-links">
+          <Link to="/blog">Blog</Link>
           <Link to="/faq">FAQ</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/privacy">Privacy</Link>

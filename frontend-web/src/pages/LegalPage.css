@@ -30,7 +30,7 @@
 }
 
 .legal-content h1 {
-  font-family: var(--font-display);
+  font-family: 'DM Sans', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-primary);

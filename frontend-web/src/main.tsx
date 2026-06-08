@@ -6,6 +6,8 @@ import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import DMCA from './pages/DMCA'
 import FAQ from './pages/FAQ'
+import Blog from './pages/Blog'
+import BlogPost from './pages/BlogPost'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -17,6 +19,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/dmca" element={<DMCA />} />
         <Route path="/faq" element={<FAQ />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

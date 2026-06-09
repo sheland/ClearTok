@@ -1,15 +1,35 @@
 {
   "version": 2,
-  "dgSpecHash": "F/AZmkbHAFg=",
+  "dgSpecHash": "7+GK1y8ee7U=",
   "success": true,
   "projectFilePath": "/Users/shelan/Desktop/Watermark/ClearTok/backend/ClearTok.API/ClearTok.API.csproj",
   "expectedPackageFiles": [
+    "/Users/shelan/.nuget/packages/azure.core/1.54.0/azure.core.1.54.0.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/azure.monitor.opentelemetry.exporter/1.8.0/azure.monitor.opentelemetry.exporter.1.8.0.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/microsoft.applicationinsights/3.1.2/microsoft.applicationinsights.3.1.2.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/microsoft.applicationinsights.aspnetcore/3.1.2/microsoft.applicationinsights.aspnetcore.3.1.2.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/microsoft.bcl.asyncinterfaces/10.0.3/microsoft.bcl.asyncinterfaces.10.0.3.nupkg.sha512",
     "/Users/shelan/.nuget/packages/microsoft.extensions.apidescription.server/6.0.5/microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/microsoft.identity.client/4.83.1/microsoft.identity.client.4.83.1.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/microsoft.identity.client.extensions.msal/4.83.1/microsoft.identity.client.extensions.msal.4.83.1.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/microsoft.identitymodel.abstractions/8.14.0/microsoft.identitymodel.abstractions.8.14.0.nupkg.sha512",
     "/Users/shelan/.nuget/packages/microsoft.openapi/1.2.3/microsoft.openapi.1.2.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry/1.15.3/opentelemetry.1.15.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.api/1.15.3/opentelemetry.api.1.15.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.api.providerbuilderextensions/1.15.3/opentelemetry.api.providerbuilderextensions.1.15.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.extensions.hosting/1.15.3/opentelemetry.extensions.hosting.1.15.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.instrumentation.aspnetcore/1.15.2/opentelemetry.instrumentation.aspnetcore.1.15.2.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.instrumentation.http/1.15.1/opentelemetry.instrumentation.http.1.15.1.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.instrumentation.sqlclient/1.15.2/opentelemetry.instrumentation.sqlclient.1.15.2.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.persistentstorage.abstractions/1.0.3/opentelemetry.persistentstorage.abstractions.1.0.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/opentelemetry.persistentstorage.filesystem/1.0.3/opentelemetry.persistentstorage.filesystem.1.0.3.nupkg.sha512",
     "/Users/shelan/.nuget/packages/swashbuckle.aspnetcore/6.5.0/swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
     "/Users/shelan/.nuget/packages/swashbuckle.aspnetcore.swagger/6.5.0/swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
     "/Users/shelan/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.5.0/swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",
-    "/Users/shelan/.nuget/packages/swashbuckle.aspnetcore.swaggerui/6.5.0/swashbuckle.aspnetcore.swaggerui.6.5.0.nupkg.sha512"
+    "/Users/shelan/.nuget/packages/swashbuckle.aspnetcore.swaggerui/6.5.0/swashbuckle.aspnetcore.swaggerui.6.5.0.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/system.clientmodel/1.10.0/system.clientmodel.1.10.0.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/system.memory.data/10.0.3/system.memory.data.10.0.3.nupkg.sha512",
+    "/Users/shelan/.nuget/packages/system.security.cryptography.protecteddata/4.5.0/system.security.cryptography.protecteddata.4.5.0.nupkg.sha512"
   ],
   "logs": []
 }

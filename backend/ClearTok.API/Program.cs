@@ -5,6 +5,7 @@ using ClearTok.API.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // ─── Services ───────────────────────────────────────────────────────────────
+builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -1,45 +1,42 @@
 # ClearTok
 
-> Download your own TikTok videos, watermark-free.
-
----
+Download your own TikTok videos, watermark-free. Live at [getcleartok.com](https://getcleartok.com).
 
 ## Project Structure
 
 ```
 ClearTok/
-├── backend/ClearTok.API/     .NET 8 Web API
+├── backend/ClearTok.API/     .NET 10 Web API
 ├── frontend-web/             React + TypeScript + Vite
-└── infrastructure/           Azure deployment configs
+└── setup_ytdlp.sh            Bundles yt-dlp into deployment zip
 ```
 
----
+## Tech Stack
 
-## Prerequisites
-
-Install these before running the project:
-
-| Tool | Version | Install |
-|------|---------|---------|
-| .NET SDK | 8.0+ | https://dot.net |
-| Node.js | 18+ | https://nodejs.org |
-| yt-dlp | latest | `pip install yt-dlp` |
-| Python | 3.8+ | https://python.org (required for yt-dlp) |
+| Layer | Technology |
+|-------|------------|
+| Frontend | React + TypeScript + Vite → Azure Static Web Apps |
+| Backend | .NET 10 Web API → Azure App Service B1 |
+| Video engine | yt-dlp (standalone binary, bundled in deployment) |
+| Proxies | Webshare residential proxies (10 IPs, stored in Azure env vars) |
+| Domain | getcleartok.com via Porkbun |
+| Analytics | Google Analytics G-40NVZMR31T |
+| Monetization | Google AdSense ca-pub-2162768168452928 |
 
 ---
 
 ## Local Development Setup
 
-### 1. Install yt-dlp
+### Prerequisites
 
-```bash
-pip install yt-dlp
+| Tool | Version | Install |
+|------|---------|---------|
+| .NET SDK | 10.0+ | https://dot.net |
+| Node.js | 18+ | https://nodejs.org |
+| Python | 3.10+ | https://python.org |
+| yt-dlp | latest | `pip3 install yt-dlp curl_cffi==0.10.0` |
 
-# Verify it works:
-yt-dlp --version
-```
-
-### 2. Start the Backend (.NET API)
+### 1. Start the Backend
 
 ```bash
 cd backend/ClearTok.API
@@ -47,11 +44,10 @@ dotnet restore
 dotnet run
 ```
 
-The API will be available at: `http://localhost:5000`
+API available at: `http://localhost:5000`  
+Health check: `http://localhost:5000/api/video/health`
 
-Test the health check: `http://localhost:5000/api/video/health`
-
-### 3. Start the Frontend (React)
+### 2. Start the Frontend
 
 ```bash
 cd frontend-web
@@ -59,7 +55,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at: `http://localhost:5173`
+App available at: `http://localhost:5173`
 
 ---
 
@@ -68,127 +64,188 @@ The app will be available at: `http://localhost:5173`
 ```
 User pastes TikTok URL
         ↓
-React validates URL format
+React strips caption prefix (mobile copy includes caption text before URL)
         ↓
 POST /api/video/download
         ↓
 .NET rate-limits by IP (10/hour)
         ↓
-YtDlpService shells out to yt-dlp CLI
+CORS validated (getcleartok.com allowed)
         ↓
-yt-dlp fetches unwatermarked video from TikTok CDN
+YtDlpService picks random proxy from Webshare pool
         ↓
-.NET streams video as file download
+yt-dlp fetches unwatermarked video from TikTok CDN via residential proxy
         ↓
-Browser saves the .mp4 file
+.NET streams video as file download (DeleteOnCloseStream — auto-deletes temp file)
+        ↓
+Browser saves cleartok-{videoId}.mp4
 ```
 
 ---
 
 ## Azure Deployment
 
-### Backend — Azure App Service (B1)
+### Frontend — Azure Static Web Apps (automatic)
+
+The frontend deploys automatically via GitHub Actions on every push to `main`.  
+Workflow file: `.github/workflows/azure-static-web-apps-proud-flower-0245b0910.yml`
 
 ```bash
-# From the backend directory:
+git add .
+git commit -m "your message"
+git push
+# GitHub Actions handles the rest — no manual steps needed
+```
+
+### Backend — Azure App Service B1 (manual)
+
+The backend requires manual deployment. Run these steps every time you change backend code:
+
+**Step 1 — Clean and build:**
+```bash
+cd backend/ClearTok.API
+rm -rf publish
+rm -f cleartok-api.zip
 dotnet publish -c Release -o ./publish
-
-# Deploy via Azure CLI:
-az webapp deploy \
-  --resource-group cleartok-rg \
-  --name cleartok-api \
-  --src-path ./publish \
-  --type zip
 ```
 
-**Important:** After deploying, install yt-dlp on the App Service:
-
+**Step 2 — Bundle yt-dlp (standalone binary + curl_cffi):**
 ```bash
-# SSH into your App Service via Azure Portal > SSH console:
-pip install yt-dlp
+bash setup_ytdlp.sh
 ```
 
-### Frontend — Azure Static Web Apps (Free tier)
+This downloads the yt-dlp Linux standalone binary (Python included — no system Python required) and installs curl_cffi into the publish folder so both survive Azure container restarts.
+
+**Step 3 — Create zip:**
+```bash
+cd publish && zip -r ../cleartok-api.zip . && cd ..
+```
+
+**Step 4 — Upload and deploy via Azure Cloud Shell:**
+
+> Note: Azure CLI cannot be installed on macOS 12. Use Azure Cloud Shell (browser terminal) at portal.azure.com instead.
+
+1. Open portal.azure.com → click Cloud Shell (`>_` icon)
+2. Drag `cleartok-api.zip` onto the Cloud Shell terminal window
+3. Run:
 
 ```bash
-cd frontend-web
-npm run build
-# Then deploy the /dist folder via Azure Portal or GitHub Actions
+az webapp deploy --name cleartok-api --resource-group cleartok-rg --src-path /home/shelly/cleartok-api.zip --type zip
+```
+
+**Step 5 — Verify:**
+```bash
+curl https://cleartok-api.azurewebsites.net/api/video/health
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "service": "ClearTok API",
+  "ytDlp": "available",
+  "ytDlpVersion": "2026.03.17",
+  "timestamp": "..."
+}
+```
+
+> No SSH reinstall needed — yt-dlp and curl_cffi are bundled in the zip and survive restarts.
+
+---
+
+## Azure Resources
+
+| Resource | Name | Details |
+|----------|------|---------|
+| Resource group | cleartok-rg | West US 2 |
+| App Service Plan | cleartok-plan | B1 Linux (~$13/mo) |
+| Web App (backend) | cleartok-api | cleartok-api.azurewebsites.net |
+| Static Web App (frontend) | cleartok-web | proud-flower-0245b0910.7.azurestaticapps.net |
+
+## Azure App Settings (Environment Variables)
+
+| Key | Description |
+|-----|-------------|
+| `ASPNETCORE_ENVIRONMENT` | Production |
+| `ASPNETCORE_URLS` | http://+:8080 |
+| `Storage__TempDirectory` | /tmp/cleartok |
+| `YtDlp__ExecutablePath` | /home/site/wwwroot/yt-dlp |
+| `Proxies__List` | Webshare residential proxies in `host:port:user:pass` format, comma separated |
+
+---
+
+## Frontend Environment Variables
+
+```bash
+# .env (local development)
+VITE_API_URL=http://localhost:5000/api
+
+# .env.production (Azure)
+VITE_API_URL=https://cleartok-api.azurewebsites.net/api
 ```
 
 ---
 
-## Activating Google AdSense
+## DNS (Porkbun)
 
-1. Go to https://adsense.google.com and create an account
-2. Add your site URL (e.g. https://cleartok.app)
-3. Paste the AdSense script tag into `index.html` (replace the commented-out line)
-4. Replace `ca-pub-XXXXXXXXXXXXXXXX` with your real publisher ID in:
-   - `index.html` (script tag)
-   - `src/components/AdSlot.tsx` (data-ad-client attribute)
-5. Replace ad slot IDs (`1234567890`, `0987654321`) with real slot IDs from your AdSense dashboard
-6. Wait for Google to review your site (usually 1–14 days)
-
-**Note:** AdSense requires your Privacy Policy page to be live before approval.
+| Type | Host | Value |
+|------|------|-------|
+| ALIAS | getcleartok.com | proud-flower-0245b0910.7.azurestaticapps.net |
+| TXT | getcleartok.com | Azure domain validation token |
+| TXT | getcleartok.com | Google Search Console verification |
 
 ---
 
-## Registering Your DMCA Agent (~6 minutes, ~$6)
+## Troubleshooting
 
-This is required for DMCA safe harbor protection under US law:
+### Downloads failing (422 error)
 
-1. Go to https://www.copyright.gov/dmca-directory/
-2. Click "Register a New Service Provider"
-3. Fill in your site name (ClearTok) and contact info
-4. Pay the $6 fee
-5. Update the DMCA contact email in `src/pages/DMCA.tsx`
+Check the logs:
+```bash
+az webapp log tail --name cleartok-api --resource-group cleartok-rg
+```
+
+| Error in logs | Fix |
+|---------------|-----|
+| `python3: No such file or directory` (exit 127) | SSH in, reinstall Python: `apt-get install -y python3 python3-pip && pip3 install curl_cffi==0.10.0 --break-system-packages` |
+| `IP address blocked` | Refresh Webshare proxies, update `Proxies__List` env var |
+| `could not find chrome cookies database` | Remove `--cookies-from-browser chrome` from YtDlpService.cs |
+| `403 Forbidden` | Proxy issue — check Webshare pool |
+
+### Health check shows unhealthy after deploy
+
+The yt-dlp standalone binary should be bundled in the zip. If health is still unhealthy:
+```bash
+az webapp ssh --name cleartok-api --resource-group cleartok-rg
+/home/site/wwwroot/yt-dlp --version
+```
+
+If that fails, re-run `setup_ytdlp.sh` and redeploy.
+
+---
+
+## Monetization & Legal
+
+| Item | Details |
+|------|---------|
+| Google AdSense | Publisher ID: ca-pub-2162768168452928 (pending approval) |
+| DMCA Agent | DMCA-1073308 — renew May 2029 (~$6 at copyright.gov) |
+| Google Analytics | G-40NVZMR31T |
+| Google Search Console | Verified, sitemap submitted |
 
 ---
 
 ## Rate Limiting
 
-Current limits (configurable in `Program.cs`):
-- **10 downloads per IP per hour** on the free tier
-- Returns HTTP 429 with a user-friendly error message
-
-To increase limits when you upgrade from free tier, change `PermitLimit` in `Program.cs`.
-
----
-
-## Environment Variables
-
-### Backend (`appsettings.json`)
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `YtDlp:ExecutablePath` | `yt-dlp` | Path to yt-dlp binary |
-| `Storage:TempDirectory` | `/tmp/cleartok` | Where temp video files are stored |
-
-### Frontend (`.env.local`)
-
-```env
-VITE_API_URL=http://localhost:5000/api   # Dev
-VITE_API_URL=https://your-api.azurewebsites.net/api   # Production
-```
-
----
-
-## Scalability Roadmap
-
-The codebase is structured for these future additions:
-
-| Feature | Where to add |
-|---------|-------------|
-| User accounts | Wire up auth middleware stub in `Program.cs` |
-| Download history | Add database in `VideoDownloadService.cs` |
-| Premium tier | Increase rate limits for authenticated users |
-| React Native app | `frontend-mobile/` uses same `useDownload` hook logic |
+- 10 downloads per IP per hour
+- Returns HTTP 429 with user-friendly error message
+- Configurable in `Program.cs` → `PermitLimit`
 
 ---
 
 ## Legal Notes
 
-- This tool is intended for creators downloading their **own** content
-- Terms of Service, Privacy Policy, and DMCA pages are included
-- Register a DMCA agent for safe harbor protection (see above)
-- Update all contact emails (`legal@cleartok.app` etc.) to real addresses
+- This tool is intended for creators downloading their own content
+- Terms of Service, Privacy Policy, and DMCA pages are included at `/terms`, `/privacy`, `/dmca`
+- DMCA agent registered for safe harbor protection
+- Blog at `/blog` with creator guides for AdSense compliance

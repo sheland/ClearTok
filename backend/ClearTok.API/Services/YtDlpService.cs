@@ -7,6 +7,7 @@ public interface IYtDlpService
 {
     Task<string> DownloadVideoAsync(string url, string outputPath, CancellationToken cancellationToken = default);
     Task<bool> IsAvailableAsync();
+    Task<string> GetVersionAsync();
 }
 
 // ─── Proxy Model ─────────────────────────────────────────────────────────────
@@ -156,6 +157,31 @@ public class YtDlpService : IYtDlpService
         catch
         {
             return false;
+        }
+    }
+
+    public async Task<string> GetVersionAsync()
+    {
+        try
+        {   
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = YtDlpPath,
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = new Process { StartInfo = processInfo };
+            process.Start();
+            var version = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            return version.Trim();
+        }
+        catch
+        {
+            return "unknown";
         }
     }
 }

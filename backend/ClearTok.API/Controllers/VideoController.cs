@@ -57,11 +57,14 @@ public class VideoController : ControllerBase
             });
         }
 
+        var version = await ytDlpService.GetVersionAsync();
+        
         return Ok(new
         {
             status = "healthy",
             service = "ClearTok API",
             ytDlp = "available",
+            ytDlpVersion = version,
             timestamp = DateTime.UtcNow
         });
     }

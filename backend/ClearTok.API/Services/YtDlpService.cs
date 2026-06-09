@@ -12,22 +12,23 @@ public interface IYtDlpService
 // ─── Proxy Model ─────────────────────────────────────────────────────────────
 public record ProxyConfig(string Host, int Port, string Username, string Password)
 {
-    // Formats proxy as: http://username:password@host:port
     public string ToytDlpFormat() => $"http://{Username}:{Password}@{Host}:{Port}";
 }
 
 // ─── Implementation ──────────────────────────────────────────────────────────
-// This service is the bridge between .NET and the yt-dlp CLI tool.
-// yt-dlp is a Python-based command line tool. We shell out to it,
-// wait for it to download the video, then return the file path.
 public class YtDlpService : IYtDlpService
 {
     private readonly ILogger<YtDlpService> _logger;
     private readonly IConfiguration _configuration;
     private readonly List<ProxyConfig> _proxies;
 
-    // yt-dlp executable path — reads from appsettings or environment variable
-    private string YtDlpPath => _configuration["YtDlp:ExecutablePath"] ?? "yt-dlp";
+    // yt-dlp executable path — reads from config, falls back to bundled binary
+    private string YtDlpPath => _configuration["YtDlp:ExecutablePath"]
+        ?? Path.Combine(AppContext.BaseDirectory, "yt-dlp")
+        ?? "yt-dlp";
+
+    // Python packages path — bundled curl_cffi inside the deployment
+    private string PythonPackagesPath => Path.Combine(AppContext.BaseDirectory, "python-packages");
 
     public YtDlpService(ILogger<YtDlpService> logger, IConfiguration configuration)
     {
@@ -38,9 +39,7 @@ public class YtDlpService : IYtDlpService
 
     /// <summary>
     /// Loads proxy list from configuration.
-    /// Format in environment variable: "host:port:user:pass,host:port:user:pass,..."
-    /// Example: "48.154.204.95:5473:user1:pass1,12.34.56.78:8080:user2:pass2"
-    /// Returns empty list if no proxies configured — falls back to direct connection.
+    /// Format: "host:port:user:pass,host:port:user:pass,..."
     /// </summary>
     private static List<ProxyConfig> LoadProxies(IConfiguration configuration)
     {
@@ -52,19 +51,12 @@ public class YtDlpService : IYtDlpService
         foreach (var entry in proxyList.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = entry.Trim().Split(':');
-            if (parts.Length == 4 &&
-                int.TryParse(parts[1], out var port))
-            {
+            if (parts.Length == 4 && int.TryParse(parts[1], out var port))
                 proxies.Add(new ProxyConfig(parts[0], port, parts[2], parts[3]));
-            }
         }
         return proxies;
     }
 
-    /// <summary>
-    /// Picks a random proxy from the pool for each request.
-    /// Returns null if no proxies are configured.
-    /// </summary>
     private ProxyConfig? GetRandomProxy()
     {
         if (_proxies.Count == 0) return null;
@@ -73,23 +65,20 @@ public class YtDlpService : IYtDlpService
 
     /// <summary>
     /// Downloads a TikTok video without watermark using yt-dlp.
-    /// Routes through a random residential proxy if configured.
+    /// Uses bundled yt-dlp binary and curl_cffi — no system Python required.
     /// </summary>
     public async Task<string> DownloadVideoAsync(string url, string outputPath, CancellationToken cancellationToken = default)
     {
         var fileName = $"{Guid.NewGuid()}.mp4";
         var fullOutputPath = Path.Combine(outputPath, fileName);
 
-        // Pick a random proxy for this request
         var proxy = GetRandomProxy();
 
-        // Build yt-dlp arguments
         var arguments = $"-o \"{fullOutputPath}\" " +
                 $"--no-playlist " +
                 $"--merge-output-format mp4 " +
                 $"--impersonate chrome ";
 
-        // Add proxy if configured
         if (proxy != null)
         {
             arguments += $"--proxy \"{proxy.ToytDlpFormat()}\" ";
@@ -104,6 +93,7 @@ public class YtDlpService : IYtDlpService
                 $"\"{url}\"";
 
         _logger.LogInformation("Starting yt-dlp download for URL: {Url}", url);
+        _logger.LogInformation("Using yt-dlp at: {Path}", YtDlpPath);
 
         var processInfo = new ProcessStartInfo
         {
@@ -114,6 +104,15 @@ public class YtDlpService : IYtDlpService
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        // Add bundled python-packages to PYTHONPATH so curl_cffi is found
+        // This lets yt-dlp find curl_cffi even without a system-wide install
+        var existingPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH") ?? "";
+        processInfo.Environment["PYTHONPATH"] = string.IsNullOrEmpty(existingPythonPath)
+            ? PythonPackagesPath
+            : $"{PythonPackagesPath}:{existingPythonPath}";
+
+        _logger.LogInformation("PYTHONPATH set to: {Path}", processInfo.Environment["PYTHONPATH"]);
 
         using var process = new Process { StartInfo = processInfo };
         process.Start();

@@ -126,7 +126,7 @@ cd publish && zip -r ../cleartok-api.zip . && cd ..
 > Note: Azure CLI cannot be installed on macOS 12. Use Azure Cloud Shell (browser terminal) at portal.azure.com instead.
 
 1. Open portal.azure.com → click Cloud Shell (`>_` icon)
-2. Drag `cleartok-api.zip` onto the Cloud Shell terminal window
+2. Drag `cleartok-api.zip` (from backend folder) onto the Cloud Shell terminal window
 3. Run:
 
 ```bash

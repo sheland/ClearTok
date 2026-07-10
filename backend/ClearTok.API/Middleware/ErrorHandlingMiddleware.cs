@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using ClearTok.API.Models;
+using ClearTok.API.Services;
 
 namespace ClearTok.API.Middleware;
 
@@ -30,9 +31,27 @@ public class ErrorHandlingMiddleware
             _logger.LogWarning("Validation error: {Message}", ex.Message);
             await WriteErrorResponse(context, HttpStatusCode.BadRequest, ex.Message);
         }
+        catch (DownloadFailedException ex)
+        {
+            // Classified yt-dlp failure from YtDlpService (after retries).
+            // The user-facing message (ex.Message) is already friendly.
+            // The raw stderr (ex.RawError) is logged for debugging but never shown to the user.
+            //
+            // Status code depends on WHOSE fault it is:
+            //   PrivateOrRemoved → 422 (the user's video is private/gone — not our problem)
+            //   Everything else  → 503 (proxy/network/timeout on our side — retry-worthy)
+            var statusCode = ex.FailureType == DownloadFailureType.PrivateOrRemoved
+                ? HttpStatusCode.UnprocessableEntity   // 422
+                : HttpStatusCode.ServiceUnavailable;   // 503
+
+            _logger.LogWarning("Download failed ({Type}). User message: {Message}. Raw stderr: {Raw}",
+                ex.FailureType, ex.Message, ex.RawError);
+
+            await WriteErrorResponse(context, statusCode, ex.Message);
+        }
         catch (InvalidOperationException ex)
         {
-            // Business logic errors (yt-dlp failed, private video, etc.) → 422
+            // Other business logic errors → 422
             _logger.LogWarning("Processing error: {Message}", ex.Message);
             await WriteErrorResponse(context, HttpStatusCode.UnprocessableEntity, ex.Message);
         }

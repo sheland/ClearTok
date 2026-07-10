@@ -35,11 +35,21 @@ public class VideoDownloadService : IVideoDownloadService
             throw new ArgumentException("Please provide a valid TikTok URL (e.g. https://www.tiktok.com/@username/video/123456789)");
         }
 
-        // Extract the video ID from the URL to use as the filename
-        // TikTok URLs follow the pattern: /video/1234567890123456789
-        var videoId = ExtractVideoId(url);
+        // ── Reject photo/slideshow posts UPFRONT ──────────────────────────────
+        // TikTok /photo/ URLs are image slideshows, not videos. yt-dlp can't
+        // download them and would waste ~3 slow proxy attempts failing. Catch it
+        // here BEFORE any network request and give the user a clear message.
+        if (IsPhotoPost(url))
+        {
+            _logger.LogInformation("Rejected photo post upfront: {Url}", url);
+            throw new DownloadFailedException(
+                DownloadFailureType.PrivateOrRemoved,  // permanent — treated as 422, no retry
+                "This looks like a photo post. ClearTok works with TikTok videos, not photo slideshows.",
+                "Photo post URL rejected before download.");
+        }
 
-        // Add this line temporarily to debug
+        // Extract the video ID from the URL to use as the filename
+        var videoId = ExtractVideoId(url);
         _logger.LogInformation("Extracted video ID: {VideoId} from URL: {Url}", videoId ?? "NULL", url);
 
         var fileName = videoId != null
@@ -62,16 +72,20 @@ public class VideoDownloadService : IVideoDownloadService
     /// <summary>
     /// Extracts the numeric video ID from a TikTok URL.
     /// Handles both standard and short URLs.
-    ///
-    /// Examples:
-    ///   https://www.tiktok.com/@username/video/7626836944281980191 → 7626836944281980191
-    ///   https://www.tiktok.com/@username/video/7626836944281980191?is_from_webapp=1 → 7626836944281980191
     /// </summary>
     private static string? ExtractVideoId(string url)
     {
-        // Match /video/ followed by a long numeric ID
         var match = Regex.Match(url, @"/video/(\d+)");
         return match.Success ? match.Groups[1].Value : null;
+    }
+
+    /// <summary>
+    /// Detects TikTok photo/slideshow posts, which are not downloadable as video.
+    /// Example: https://www.tiktok.com/@user/photo/7655840136382532894
+    /// </summary>
+    private static bool IsPhotoPost(string url)
+    {
+        return Regex.IsMatch(url, @"/photo/\d+", RegexOptions.IgnoreCase);
     }
 
     /// <summary>

@@ -122,7 +122,7 @@ export default function App() {
           </h1>
 
           <p className="subheadline">
-            Paste your TikTok link below and download your own video in seconds — clean, HD, ready to share anywhere.
+            Paste your TikTok link below and download your own video in seconds — original HD quality kept, watermark gone, ready to share anywhere.
           </p>
 
           {/* ── Main Input Card ─────────────────────────────────────── */}
@@ -137,7 +137,7 @@ export default function App() {
                   </svg>
                 </div>
                 <p className="success-text">Your video is downloading!</p>
-                <p className="success-sub">Check your Downloads folder — your watermark-free video is there.</p>
+                <p className="success-sub">Check your Downloads folder — original HD quality kept, no watermark.</p>
                 <button className="btn-secondary" onClick={onReset}>
                   Download another video
                 </button>
@@ -184,9 +184,7 @@ export default function App() {
                         ? 'Connecting to TikTok...'
                         : progress < 60
                         ? 'Downloading your video...'
-                        : progress < 85
-                        ? 'Almost there...'
-                        : 'Finishing up...'}
+                        : 'Still working — hang tight...'}
                     </p>
                   </div>
                 )}

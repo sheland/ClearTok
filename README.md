@@ -91,6 +91,7 @@ The frontend deploys automatically via GitHub Actions on every push to `main`.
 Workflow file: `.github/workflows/azure-static-web-apps-proud-flower-0245b0910.yml`
 
 ```bash
+cd /Users/shelan/Desktop/Watermark/ClearTok
 git add .
 git commit -m "your message"
 git push

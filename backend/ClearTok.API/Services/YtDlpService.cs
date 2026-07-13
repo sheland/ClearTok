@@ -211,6 +211,8 @@ public class YtDlpService : IYtDlpService
 
         // ── Permanent: the video itself is unavailable. ──
         if (err.Contains("private") ||
+            err.Contains("you do not have permission") ||
+            err.Contains("log into an account") ||
             err.Contains("video is unavailable") ||
             err.Contains("removed") ||
             err.Contains("not available in your") ||

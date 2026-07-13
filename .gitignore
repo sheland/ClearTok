@@ -5,13 +5,17 @@ dist/
 .env
 .env.local
 
-# .NET
+# .NET build output
 bin/
 obj/
 *.user
 *.suo
 .vs/
 appsettings.Development.json
+
+# Deployment artifacts
+publish/
+*.zip
 
 # Mac
 .DS_Store
@@ -23,6 +27,3 @@ appsettings.Development.json
 # Logs
 logs/
 *.log
-.DS_Store
-backend/ClearTok.API/publish/
-backend/ClearTok.API/cleartok-api.zip

@@ -1,70 +1,69 @@
 #!/bin/bash
-# ─── ClearTok — yt-dlp Setup Script ──────────────────────────────────────────
-# Run this ONCE before building the deployment zip.
-# Downloads yt-dlp binary and installs curl_cffi into the publish folder
-# so they survive Azure container restarts.
+# ─── ClearTok — Deploy Prep Script ───────────────────────────────────────────
+# Run AFTER `dotnet publish`, BEFORE zipping.
+#
+# WHAT CHANGED (and why):
+#   Previously this script downloaded the 38MB yt-dlp binary into publish/,
+#   which made the deploy zip ~46MB — too large to upload through Azure Cloud
+#   Shell (it consistently timed out at ~90-100%).
+#
+#   Now: the binary is NOT bundled. Instead, startup.sh (which Azure runs on
+#   every container start) downloads yt-dlp server-side from GitHub in ~4s.
+#   This keeps the deploy zip small (~10MB) and requires no manual SSH step.
+#
+# This script's only job now is to copy startup.sh into publish/ so it ships
+# with the deployment and lands at /home/site/wwwroot/startup.sh.
 #
 # Usage: bash setup_ytdlp.sh
-# Run from: /Users/shelan/Desktop/Watermark/ClearTok/backend/ClearTok.API
+# Run from: backend/ClearTok.API
 
-set -e  # Exit on any error
+set -e
 
 PUBLISH_DIR="./publish"
-YTDLP_URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux"
 
-echo "─── ClearTok yt-dlp Setup ───────────────────────────────────────"
+echo "─── ClearTok deploy prep ───────────────────────────────────────"
 echo ""
 
-# Step 1 — Make sure publish folder exists
+# ── Verify publish folder exists ────────────────────────────────────────────
 if [ ! -d "$PUBLISH_DIR" ]; then
   echo "ERROR: publish/ folder not found."
   echo "Run 'dotnet publish -c Release -o ./publish' first."
   exit 1
 fi
-
 echo "✓ publish/ folder found"
 
-# Step 2 — Download yt-dlp binary
-echo ""
-echo "Downloading yt-dlp binary..."
-rm -f "$PUBLISH_DIR/yt-dlp"
-curl -L "$YTDLP_URL" -o "$PUBLISH_DIR/yt-dlp"
-chmod +x "$PUBLISH_DIR/yt-dlp"
-echo "✓ yt-dlp downloaded and made executable"
+# ── Copy startup script into the deployment ─────────────────────────────────
+if [ ! -f "./startup.sh" ]; then
+  echo "ERROR: startup.sh not found in $(pwd)"
+  echo "It should live alongside this script in backend/ClearTok.API/"
+  exit 1
+fi
 
-# Step 3 — Install curl_cffi into publish folder
-echo ""
-echo "Installing curl_cffi into publish folder..."
-pip3 install curl_cffi==0.10.0 \
-  --target "$PUBLISH_DIR/python-packages" \
-  --break-system-packages \
-  --quiet
-echo "✓ curl_cffi installed to publish/python-packages"
+cp ./startup.sh "$PUBLISH_DIR/startup.sh"
+chmod +x "$PUBLISH_DIR/startup.sh"
+echo "✓ startup.sh copied to publish/ and made executable"
 
-# Step 4 — Verify
+# ── Verify ──────────────────────────────────────────────────────────────────
 echo ""
-echo "Verifying..."
+if [ -x "$PUBLISH_DIR/startup.sh" ]; then
+  echo "✓ startup.sh: present and executable"
+else
+  echo "✗ startup.sh: MISSING or not executable"
+  exit 1
+fi
+
+# Sanity check: the binary should NOT be here (that's the point)
 if [ -f "$PUBLISH_DIR/yt-dlp" ]; then
-  echo "✓ yt-dlp binary: present"
-else
-  echo "✗ yt-dlp binary: MISSING"
-  exit 1
-fi
-
-if [ -d "$PUBLISH_DIR/python-packages/curl_cffi" ]; then
-  echo "✓ curl_cffi: present"
-else
-  echo "✗ curl_cffi: MISSING"
-  exit 1
+  echo "⚠ WARNING: yt-dlp binary found in publish/ — this will bloat the zip."
+  echo "  Remove it: rm -f $PUBLISH_DIR/yt-dlp"
 fi
 
 echo ""
-echo "─── Setup complete ──────────────────────────────────────────────"
+echo "─── Ready to zip ───────────────────────────────────────────────"
 echo ""
-echo "Next steps:"
-echo "  1. cd publish"
-echo "  2. zip -r ../cleartok-api.zip ."
-echo "  3. cd .."
-echo "  4. Upload zip to Cloud Shell and deploy"
-echo "  5. NO SSH reinstall needed — everything is bundled!"
+echo "Next:"
+echo "  1. cd publish && zip -r ../cleartok-api.zip . && cd .."
+echo "  2. Check size — should be ~10MB, not 46MB"
+echo "  3. Upload to Cloud Shell and deploy"
+echo "  4. Azure's startup.sh fetches yt-dlp automatically — no SSH needed"
 echo ""
